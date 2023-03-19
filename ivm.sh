@@ -7,7 +7,7 @@ function appendDump(){
 
     if grep -q "endmodule" "$file_path"; then
         # TODO: better dumpfile directory
-        gsed -i "/endmodule/i initial begin \$dumpfile(\"$file_base.vcd\") ;\$dumpvars(0, $file_base) ; end" "$file_path";
+        gsed -i "/endmodule/i initial begin \$dumpfile(\"waveforms/$file_base.vcd\") ;\$dumpvars(0, $file_base) ; end" "$file_path";
         echo "Dump added to $file_path"
     else
         echo "No endmodule found in $file_path"
@@ -68,6 +68,7 @@ case "$1" in
 
         # restore original content
         cp "$file_path.bak" "$file_path"
+        rm $file_path.bak &
         ;;
     *)
         echo "Command not found"
