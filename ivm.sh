@@ -29,6 +29,53 @@ function appendTime(){
     fi
 }
 
+function gatherFiles(){
+    if [ $# -eq 0 ]; then
+  # No command-line arguments provided, run all commands except wildcard
+    for cmd in modules results tests waveforms; do
+        if [ "$cmd" != "*" ]; then
+            "$0" "$cmd"
+        fi
+    done
+    else
+    # Command-line argument provided, run specified command
+        case "$1" in
+            modules)
+                find . -type f \( -name '*.v' -o -name '*.sv' \) \
+                | grep -v '_tb' \
+                | xargs -I{} mv {} ./modules 2>/dev/null
+                echo "Moved modules"
+                ;;
+            results)
+                find . -type f -name '*_result.txt' \
+                -exec mv {} ./results \; 2>/dev/null
+                echo "Moved results"
+                ;;
+            tests)
+                find . -type f \( -name '*_tb.v' -o -name '*_tb.sv' \) \
+                -exec mv {} ./tests \; 2>/dev/null
+                echo "Moved tests"
+                ;;
+            waveforms)
+                mv -f *.vcd ./waveforms 2>/dev/null
+                echo "Moved waveforms"
+                ;;
+            *)
+                echo "Command not found"
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+function runIverilog(){
+    file_path=$1
+    file_name=$(basename -- $file_path)
+    iverilog -y ./modules -o runs/${file_name%.*} $file_path
+    echo "Compiled $file_path" &
+    vvp runs/${file_name%.*} &
+}
+
 case "$1" in
     init)
         mkdir {modules,results,runs,tests,waveforms} 2>/dev/null
@@ -36,9 +83,9 @@ case "$1" in
         ;;
     gather)
         if [ -n "$2" ]; then
-            ./gatherFiles.sh "$2"
+            gatherFiles "$2"
         else
-            ./gatherFiles.sh 2>/dev/null
+            gatherFiles 2>/dev/null
             echo "Moved files"
         fi
         ;;
@@ -64,7 +111,7 @@ case "$1" in
         if [ ! -z $test_time ]; then
             appendTime "$file_path" 1>/dev/null "$test_time"
         fi
-        ./runIverilog.sh "$file_path"
+        runIverilog "$file_path"
 
         # restore original content
         cp "$file_path.bak" "$file_path"
