@@ -4,10 +4,11 @@ function appendDump(){
     dir_path="$(dirname "$file_path")"
     file_name="$(basename "$file_path")"
     file_base="${file_name%.*}"
+    module_name=$(echo "$file_base" | tr '[:upper:]' '[:lower:]')
 
     if grep -q "endmodule" "$file_path"; then
         # TODO: better dumpfile directory
-        gsed -i "/endmodule/i initial begin \$dumpfile(\"waveforms/$file_base.vcd\") ;\$dumpvars(0, $file_base) ; end" "$file_path";
+        gsed -i "/endmodule/i initial begin \$dumpfile(\"waveforms/$module_name.vcd\") ;\$dumpvars(0, $module_name) ; end" "$file_path";
         echo "Dump added to $file_path"
     else
         echo "No endmodule found in $file_path"
@@ -69,6 +70,7 @@ function gatherFiles(){
 }
 
 function runIverilog(){
+    sleep 3
     file_path=$1
     file_name=$(basename -- $file_path)
     iverilog -y ./modules -o runs/${file_name%.*} $file_path
