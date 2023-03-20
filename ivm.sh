@@ -35,7 +35,7 @@ function gatherFiles(){
   # No command-line arguments provided, run all commands except wildcard
     for cmd in modules results tests waveforms; do
         if [ "$cmd" != "*" ]; then
-            "$0" "$cmd"
+            "$0" gather "$cmd"
         fi
     done
     else
@@ -43,7 +43,7 @@ function gatherFiles(){
         case "$1" in
             modules)
                 find . -type f \( -name '*.v' -o -name '*.sv' \) \
-                | grep -v '_tb' \
+                | grep -v '_tb' -v '_TB' \
                 | xargs -I{} mv {} ./modules 2>/dev/null
                 echo "Moved modules"
                 ;;
@@ -53,8 +53,9 @@ function gatherFiles(){
                 echo "Moved results"
                 ;;
             tests)
-                find . -type f \( -name '*_tb.v' -o -name '*_tb.sv' \) \
-                -exec mv {} ./tests \; 2>/dev/null
+                find . -type f \( -name '*.v' -o -name '*.sv' \) \
+                | grep -e '_tb' -e '_TB' \
+                | xargs -I{} mv {} ./modules 2>/dev/null
                 echo "Moved tests"
                 ;;
             waveforms)
@@ -70,12 +71,11 @@ function gatherFiles(){
 }
 
 function runIverilog(){
-    sleep 3
-    file_path=$1
-    file_name=$(basename -- $file_path)
-    iverilog -y ./modules -o runs/${file_name%.*} $file_path
-    echo "Compiled $file_path" &
-    vvp runs/${file_name%.*} &
+    filename=$(basename -- "$1")
+    dirname=$(dirname -- "$1")
+    iverilog -y ${dirname} -o run/${filename%.*} ${1}
+    echo "Compiled ${1}" &
+    vvp run/${filename%.*}
 }
 
 case "$1" in
