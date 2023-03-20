@@ -119,6 +119,11 @@ case "$1" in
         cp "$file_path.bak" "$file_path"
         rm $file_path.bak &
         ;;
+
+    open) 
+        open -a gtkwave.app $2
+        ;;
+        
     *)
         echo "Command not found"
         exit 1
