@@ -114,7 +114,8 @@ case "$1" in
             exit 1
         fi
 
-        cp "$file_path" "$file_path.bak"
+        cp "$file_path" "$file_path.bak" &
+        wait
 
         appendDump "$file_path" 1>/dev/null
         if [ ! -z $test_time ]; then
