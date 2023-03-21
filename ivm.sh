@@ -103,18 +103,27 @@ run)
     shift # shift past the "run" command
     # set default time value
     test_time=""
-    # check for optional "-t" flag
-    if [ "$1" == "-t" ]; then
-        test_time="$2"
-        shift # shift past the "-t" flag
-        shift # shift past the time value argument
-    fi
     library_path=""
-    if [ "$1" == "-y" ]; then
-        library_path="$2"
-        shift # shift past the "-y" flag
-        shift # shift past the library path value argument
-    fi
+    while getopts "t:y:" opt; do
+        case $opt in
+        t)
+            test_time=$OPTARG
+            ;;
+        y)
+            library_path=$OPTARG
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+        esac
+    done
+
+    shift $((OPTIND - 1))
 
     file_path="$1"
     if [ ! -e "$file_path" ]; then
