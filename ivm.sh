@@ -32,7 +32,7 @@ function appendTime() {
 function gatherFiles() {
     if [ $# -eq 0 ]; then
         # No command-line arguments provided, run all commands except wildcard
-        for cmd in results tests waveforms; do
+        for cmd in tests waveforms; do
             if [ "$cmd" != "*" ]; then
                 "$0" gather "$cmd"
             fi
@@ -40,6 +40,18 @@ function gatherFiles() {
     else
         # Command-line argument provided, run specified command
         case "$1" in
+        modules)
+            find . -type f \( -name '*.v' -o -name '*.sv' \) |
+                grep -v '_tb' -v '_TB' |
+                xargs -I{} mv {} ./modules 2>/dev/null
+            echo "Moved modules"
+            ;;
+        tests)
+            find . -type f \( -name '*.v' -o -name '*.sv' \) |
+                grep -e '_tb' -e '_TB' |
+                xargs -I{} mv {} ./modules 2>/dev/null
+            echo "Moved tests"
+            ;;
         waveforms)
             mv -f *.vcd ./waveforms 2>/dev/null
             echo "Moved waveforms"
@@ -53,23 +65,24 @@ function gatherFiles() {
 }
 
 function runIverilog() {
-    file_name=$(basename -- "$1")
-    dir_name=$(dirname -- "$1")
+    file_path=$1
+    file_name=$(basename -- "$file_path")
+    dir_name=$(dirname -- "$file_path")
     error_log_path=errors/${file_name%.*}.log
-    iverilog -y ${dir_name} -o runs/${file_name%.*} ${1} 2>$error_log_path &
+    iverilog -y ${dir_name} -o runs/${file_name%.*} $file_path 2>$error_log_path &
     wait
     if [ -s $error_log_path ]; then
         echo "Error: Icarus Verilog failed"
         cat $error_log_path
     else
-        echo "Compiled ${1}"
+        echo "Compiled $file_path"
         vvp runs/${file_name%.*}
     fi
 }
 
 case "$1" in
 init)
-    mkdir {runs,errors,waveforms} 2>/dev/null
+    mkdir {errors,modules,runs,tests,waveforms} 2>/dev/null
     echo "Initiate as iverilog project"
     ;;
 gather)
