@@ -66,10 +66,16 @@ function gatherFiles() {
 
 function runIverilog() {
     file_path=$1
+    library_path=$2
     file_name=$(basename -- "$file_path")
     dir_name=$(dirname -- "$file_path")
     error_log_path=errors/${file_name%.*}.log
-    iverilog -y ${dir_name} -o runs/${file_name%.*} $file_path 2>$error_log_path &
+
+    if [ -z $library_path ]; then
+        library_path=$(dirname -- "$file_path")
+    fi
+
+    iverilog -y ${library_path} -o runs/${file_name%.*} $file_path 2>$error_log_path &
     wait
     if [ -s $error_log_path ]; then
         echo "Error: Icarus Verilog failed"
@@ -103,6 +109,13 @@ run)
         shift # shift past the "-t" flag
         shift # shift past the time value argument
     fi
+    library_path=""
+    if [ "$1" == "-y" ]; then
+        library_path="$2"
+        shift # shift past the "-y" flag
+        shift # shift past the library path value argument
+    fi
+
     file_path="$1"
     if [ ! -e "$file_path" ]; then
         echo "ivm run: $file_path: No such file or directory"
@@ -116,7 +129,7 @@ run)
     if [ ! -z $test_time ]; then
         appendTime "$file_path" "$test_time" 1>/dev/null
     fi
-    runIverilog "$file_path"
+    runIverilog "$file_path" "$library_path"
 
     # restore original content
     cp "$file_path.bak" "$file_path" &
