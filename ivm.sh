@@ -72,7 +72,7 @@ function runIverilog() {
     error_log_path=errors/${file_name%.*}.log
 
     if [ -z $library_path ]; then
-        library_path=$(dirname -- "$file_path")
+        library_path="."
     fi
 
     iverilog -y ${library_path} -o runs/${file_name%.*} $file_path 2>$error_log_path &
