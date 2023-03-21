@@ -49,7 +49,7 @@ function gatherFiles() {
         tests)
             find . -type f \( -name '*.v' -o -name '*.sv' \) |
                 grep -e '_tb' -e '_TB' |
-                xargs -I{} mv {} ./modules 2>/dev/null
+                xargs -I{} mv {} ./tests 2>/dev/null
             echo "Moved tests"
             ;;
         waveforms)
