@@ -73,9 +73,16 @@ function gatherFiles(){
 function runIverilog(){
     filename=$(basename -- "$1")
     dirname=$(dirname -- "$1")
-    iverilog -y ${dirname} -o run/${filename%.*} ${1}
-    echo "Compiled ${1}" &
-    vvp run/${filename%.*}
+    iverilog -y ${dirname} -o runs/${filename%.*} ${1} 2> iverilog_error.log &
+    wait
+    if [ -s iverilog_error.log ]; then
+        echo "Error: Icarus Verilog failed"
+        cat iverilog_error.log 
+        exit 1
+    else 
+        echo "Compiled ${1}"
+        vvp runs/${filename%.*}
+    fi
 }
 
 case "$1" in
@@ -116,8 +123,9 @@ case "$1" in
         runIverilog "$file_path"
 
         # restore original content
-        cp "$file_path.bak" "$file_path"
-        rm $file_path.bak &
+        cp "$file_path.bak" "$file_path" &
+        wait
+        rm $file_path.bak
         ;;
 
     open) 
