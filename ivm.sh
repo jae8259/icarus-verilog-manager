@@ -78,7 +78,6 @@ function runIverilog(){
     if [ -s iverilog_error.log ]; then
         echo "Error: Icarus Verilog failed"
         cat iverilog_error.log 
-        exit 1
     else 
         echo "Compiled ${1}"
         vvp runs/${filename%.*}
