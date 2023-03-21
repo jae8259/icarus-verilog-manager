@@ -8,7 +8,7 @@ function appendDump(){
 
     if grep -q "endmodule" "$file_path"; then
         # TODO: better dumpfile directory
-        gsed -i "/endmodule/i initial begin \$dumpfile(\"waveforms/$module_name.vcd\") ;\$dumpvars(0, $module_name) ; end" "$file_path";
+        gsed -i "/endmodule/i initial begin \$dumpfile(\"waveforms/$file_base.vcd\") ;\$dumpvars(0, $module_name) ; end" "$file_path";
         echo "Dump added to $file_path"
     else
         echo "No endmodule found in $file_path"
@@ -33,7 +33,7 @@ function appendTime(){
 function gatherFiles(){
     if [ $# -eq 0 ]; then
   # No command-line arguments provided, run all commands except wildcard
-    for cmd in modules results tests waveforms; do
+    for cmd in results tests waveforms; do
         if [ "$cmd" != "*" ]; then
             "$0" gather "$cmd"
         fi
@@ -41,23 +41,6 @@ function gatherFiles(){
     else
     # Command-line argument provided, run specified command
         case "$1" in
-            modules)
-                find . -type f \( -name '*.v' -o -name '*.sv' \) \
-                | grep -v '_tb' -v '_TB' \
-                | xargs -I{} mv {} ./modules 2>/dev/null
-                echo "Moved modules"
-                ;;
-            results)
-                find . -type f -name '*_result.txt' \
-                -exec mv {} ./results \; 2>/dev/null
-                echo "Moved results"
-                ;;
-            tests)
-                find . -type f \( -name '*.v' -o -name '*.sv' \) \
-                | grep -e '_tb' -e '_TB' \
-                | xargs -I{} mv {} ./modules 2>/dev/null
-                echo "Moved tests"
-                ;;
             waveforms)
                 mv -f *.vcd ./waveforms 2>/dev/null
                 echo "Moved waveforms"
@@ -71,22 +54,23 @@ function gatherFiles(){
 }
 
 function runIverilog(){
-    filename=$(basename -- "$1")
-    dirname=$(dirname -- "$1")
-    iverilog -y ${dirname} -o runs/${filename%.*} ${1} 2> iverilog_error.log &
+    file_name=$(basename -- "$1")
+    dir_name=$(dirname -- "$1")
+    error_log_path=errors/${file_name%.*}.log
+    iverilog -y ${dir_name} -o runs/${file_name%.*} ${1} 2> $error_log_path &
     wait
-    if [ -s iverilog_error.log ]; then
+    if [ -s $error_log_path ]; then
         echo "Error: Icarus Verilog failed"
-        cat iverilog_error.log 
+        cat $error_log_path
     else 
         echo "Compiled ${1}"
-        vvp runs/${filename%.*}
+        vvp runs/${file_name%.*}
     fi
 }
 
 case "$1" in
     init)
-        mkdir {modules,results,runs,tests,waveforms} 2>/dev/null
+        mkdir {runs,errors,waveforms} 2>/dev/null
         echo "Initiate as iverilog project"
         ;;
     gather)
