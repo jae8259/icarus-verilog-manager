@@ -151,7 +151,7 @@ open)
     ;;
 
 *)
-    echo "Command not found"
+    echo "ivm : Command not found"
     exit 1
     ;;
 esac
