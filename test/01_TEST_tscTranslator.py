@@ -34,6 +34,16 @@ class tscTranslatorTest(unittest.TestCase):
             with self.subTest():
                 self.assertEqual(answer, test_answer)
 
+    def test_pipe(self):
+        answers = ["ADI $2, $0, 4", "JMP 21", "LHI $3, 3"]
+        test_answers = [
+            tscTranslator.read_hex_to_formatted_instruction(el)
+            for el in self.machine_codes
+        ]
+        for answer, test_answer in zip(answers, test_answers):
+            with self.subTest():
+                self.assertEqual(answer, test_answer)
+
 
 if __name__ == "__main__":
     unittest.main()

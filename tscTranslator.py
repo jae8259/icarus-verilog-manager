@@ -66,6 +66,10 @@ OPCODE_MAP = {dec_to_opcode(key): value for key, value in OPCODE_MAP.items()}
 FUNC_MAP = {dec_to_func_code(key): value for key, value in FUNC_MAP.items()}
 
 
+def read_hex_to_formatted_instruction(machine_code: str):
+    return format_instruction(translate_binary_to_tsc(map_to_binary(machine_code)))
+
+
 def map_to_binary(machine_code: str):
     return format(int(machine_code, HEX), "b").zfill(16)
 
