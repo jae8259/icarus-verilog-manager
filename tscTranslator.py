@@ -91,17 +91,19 @@ def add_tsc_comment(target: str) -> str:
         lambda match: match.group(1)
         + match.group(0).strip()
         + "  // TSC = "
-        + read_hex_to_formatted_instruction(match.group(2).zfill(4)),
+        + read_hex_as_formatted_instruction(match.group(2).zfill(4)),
         target,
     )
     return result
 
 
-def read_hex_to_formatted_instruction(machine_code: str):
-    return format_instruction(translate_binary_to_tsc(map_to_binary(machine_code)))
+def read_hex_as_formatted_instruction(machine_code: str):
+    return format_tsc_to_instruction(
+        translate_binary_to_tsc(read_hex_as_binary(machine_code))
+    )
 
 
-def map_to_binary(machine_code: str):
+def read_hex_as_binary(machine_code: str):
     return format(int(machine_code, HEX), "b").zfill(16)
 
 
@@ -146,7 +148,7 @@ def translate_j_type(machine_code: str):
     return f"{func_name} tar:{int(target_address, BIN)}"
 
 
-def format_instruction(instruction: str):
+def format_tsc_to_instruction(instruction: str):
     result = instruction.split(" ")
     if result[0] == "JMP" or result[0] == "JAL":
         return instruction
@@ -172,4 +174,4 @@ if __name__ == "__main__":
     if args.in_path is not None:
         add_comment_on_file(args.in_path, args.out_path)
     else:
-        print(read_hex_to_formatted_instruction(args.hexcode))
+        print(read_hex_as_formatted_instruction(args.hexcode))

@@ -32,7 +32,7 @@ function appendTime() {
 function gatherFiles() {
     if [ $# -eq 0 ]; then
         # No command-line arguments provided, run all commands except wildcard
-        for cmd in tests waveforms; do
+        for cmd in modules tests waveforms; do
             if [ "$cmd" != "*" ]; then
                 "$0" gather "$cmd"
             fi
@@ -57,7 +57,7 @@ function gatherFiles() {
             echo "Moved waveforms"
             ;;
         *)
-            echo "Command not found"
+            echo "ivm : Command not found"
             exit 1
             ;;
         esac
