@@ -92,7 +92,7 @@ def translate_binary_to_tsc(machine_code: str):
 def translate_r_type(machine_code: str):
     func_code = machine_code[10:]
     rs, rt, rd = machine_code[4:6], machine_code[6:8], machine_code[8:10]
-    func_name: str = FUNC_MAP[func_code]
+    func_name: str = FUNC_MAP.get(func_code)
 
     return f"{func_name} ${int(rd, BIN)}, ${int(rs, BIN)}, ${int(rt, BIN)}"
 
@@ -101,7 +101,7 @@ def translate_i_type(machine_code: str):
     immediate = machine_code[8:]
     rs, rt = machine_code[4:6], machine_code[6:8]
     opcode = machine_code[0:4]
-    func_name: str = OPCODE_MAP[opcode]
+    func_name: str = OPCODE_MAP.get(opcode)
 
     return f"{func_name} ${int(rt, BIN)}, ${int(rs, BIN)}, {int(immediate, BIN)}"
 
@@ -109,7 +109,7 @@ def translate_i_type(machine_code: str):
 def translate_j_type(machine_code: str):
     target_address = machine_code[4:]
     opcode = machine_code[0:4]
-    func_name: str = OPCODE_MAP[opcode]
+    func_name: str = OPCODE_MAP.get(opcode)
 
     return f"{func_name} {int(target_address, BIN)}"
 
@@ -118,7 +118,8 @@ def format_instruction(instruction: str):
     result = instruction.split(" ")
     if result[0] == "JMP" or result[0] == "JAL":
         return instruction
-
+    if result[0] == "None":
+        return "Invalid instruction"
     fmt = INSTRUCTION_FORMAT[result[0]]
     gen = zip(result[1:], fmt)
     return reduce(

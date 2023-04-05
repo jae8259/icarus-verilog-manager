@@ -3,6 +3,7 @@ results/
 runs/
 tests/
 waveforms/
+resource/
 
 *.v
 *.sv

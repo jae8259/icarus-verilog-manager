@@ -1,8 +1,19 @@
 import re
+from pathlib import Path
 
 from tscTranslator import read_hex_to_formatted_instruction
 
-HEX_REGEX = r"memory\[\d+\].*=.*16'h(\d{1,4});\s*"
+HEX_REGEX = r"memory\[.*\].*=.*16'h([0-9A-Fa-f]{1,4});\s*"
+
+
+def add_comment_on_file(target_path: Path, save_path: Path):
+    content = ""
+    with open(target_path, "r") as verilog_file:
+        content = verilog_file.read()
+    content = add_tsc_comment(content)
+
+    with open(save_path, "w") as comment_verilog_file:
+        comment_verilog_file.write(content)
 
 
 def add_tsc_comment(target: str) -> str:
@@ -12,16 +23,17 @@ def add_tsc_comment(target: str) -> str:
 
     result = re.sub(
         HEX_REGEX,
-        lambda match: match.group(0)
+        lambda match: match.group(0).rstrip()
         + "  // TSC = "
-        + read_hex_to_formatted_instruction(match.group(1).zfill(4)),
+        + read_hex_to_formatted_instruction(match.group(1).zfill(4))
+        + "\n",
         target,
     )
     return result
 
 
 def main():
-    print(add_tsc_comment("memory[8]  = 16'h4204;"))
+    add_comment_on_file("./resource/memory.v", "./resource/memory2.v")
 
 
 if __name__ == "__main__":
