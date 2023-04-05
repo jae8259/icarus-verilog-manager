@@ -7,16 +7,32 @@ import tscTranslator
 
 class tscTranslatorTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.machine_code = "4204"
+        self.machine_codes = ["4204", "9015", "6303"]
 
     def test_map_to_binary(self):
-        answer = "0100001000000100"
-        self.assertEqual(answer, tscTranslator.map_to_binary(self.machine_code))
+        answers = ["0100001000000100", "1001000000010101", "0110001100000011"]
+        test_answers = [tscTranslator.map_to_binary(el) for el in self.machine_codes]
+        for answer, test_answer in zip(answers, test_answers):
+            with self.subTest():
+                self.assertEqual(answer, test_answer)
 
     def test_translate_binary_to_tsc(self):
-        answer = "ADI $2, $0, 4"
-        machine_code = tscTranslator.map_to_binary(self.machine_code)
-        self.assertEqual(answer, tscTranslator.translate_binary_to_tsc(machine_code))
+        answers = ["ADI $2, $0, 4", "JMP 21", "LHI $3, $0, 3"]
+        test_answers = [
+            tscTranslator.translate_binary_to_tsc((tscTranslator.map_to_binary(el)))
+            for el in self.machine_codes
+        ]
+        for answer, test_answer in zip(answers, test_answers):
+            with self.subTest():
+                self.assertEqual(answer, test_answer)
+
+    def test_format_instruction(self):
+        tests = ["ADI $2, $0, 4", "JMP 21", "LHI $3, $0, 3"]
+        answers = ["ADI $2, $0, 4", "JMP 21", "LHI $3, 3"]
+        test_answers = [tscTranslator.format_instruction(el) for el in tests]
+        for answer, test_answer in zip(answers, test_answers):
+            with self.subTest():
+                self.assertEqual(answer, test_answer)
 
 
 if __name__ == "__main__":

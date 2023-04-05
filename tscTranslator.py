@@ -2,8 +2,7 @@
 
 # Render digits to binary so 16bit string
 
-# opcode = string[12:16]
-# f
+from functools import reduce
 from typing import Dict
 
 HEX = 16
@@ -31,7 +30,6 @@ OPCODE_MAP: Dict[str, str] = {
     9: "JMP",
     10: "JAL",
 }
-OPCODE_MAP = {dec_to_opcode(key): value for key, value in OPCODE_MAP.items()}
 
 FUNC_MAP: Dict[str, str] = {
     0: "ADD",
@@ -47,6 +45,24 @@ FUNC_MAP: Dict[str, str] = {
     28: "WWD",
     29: "HLT",
 }
+INSTRUCTION_FORMAT = {}
+for func_code, r_instruction in FUNC_MAP.items():
+    if func_code in range(0, 4):
+        INSTRUCTION_FORMAT[r_instruction] = (True, True, True)
+    elif func_code in range(4, 25):
+        INSTRUCTION_FORMAT[r_instruction] = (True, True, False)
+    elif func_code in range(25, 29):
+        INSTRUCTION_FORMAT[r_instruction] = (False, True, False)
+    else:
+        INSTRUCTION_FORMAT[r_instruction] = (False, False, False)
+for opcode, instruction in OPCODE_MAP.items():
+    match opcode:
+        case 6 | 2 | 3:
+            INSTRUCTION_FORMAT[instruction] = (True, False, True)
+        case _:
+            INSTRUCTION_FORMAT[instruction] = (True, True, True)
+
+OPCODE_MAP = {dec_to_opcode(key): value for key, value in OPCODE_MAP.items()}
 FUNC_MAP = {dec_to_func_code(key): value for key, value in FUNC_MAP.items()}
 
 
@@ -73,7 +89,7 @@ def translate_r_type(machine_code: str):
     rs, rt, rd = machine_code[4:6], machine_code[6:8], machine_code[8:10]
     func_name: str = FUNC_MAP[func_code]
 
-    return f"{func_name} ${int(rs, BIN)}, ${int(rt, BIN)}, ${int(rd, BIN)}"
+    return f"{func_name} ${int(rd, BIN)}, ${int(rs, BIN)}, ${int(rt, BIN)}"
 
 
 def translate_i_type(machine_code: str):
@@ -94,4 +110,12 @@ def translate_j_type(machine_code: str):
 
 
 def format_instruction(instruction: str):
-    raise NotImplementedError
+    result = instruction.split(" ")
+    if result[0] == "JMP" or result[0] == "JAL":
+        return instruction
+
+    fmt = INSTRUCTION_FORMAT[result[0]]
+    gen = zip(result[1:], fmt)
+    return reduce(
+        lambda acc, curr: acc + (" " + curr[0] if curr[1] else ""), gen, result[0]
+    )
