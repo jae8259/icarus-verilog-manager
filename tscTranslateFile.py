@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tscTranslator import read_hex_to_formatted_instruction
 
-HEX_REGEX = r"memory\[.*\].*=.*16'h([0-9A-Fa-f]{1,4});\s*"
+HEX_REGEX = r"^(.*?)memory\[(.*)\].*=\s*(16'h|\d{1,2}'h)?([0-9A-Fa-f]{1,4});\s*$"
 
 
 def add_comment_on_file(target_path: Path, save_path: Path):
@@ -18,15 +18,14 @@ def add_comment_on_file(target_path: Path, save_path: Path):
 
 def add_tsc_comment(target: str) -> str:
     result = ""
-    machine_codes = re.findall(HEX_REGEX, target)
-    machine_codes = [code.zfill(4) for code in machine_codes]
+    pattern = re.compile(HEX_REGEX, re.MULTILINE)
 
     result = re.sub(
-        HEX_REGEX,
-        lambda match: match.group(0).rstrip()
+        pattern,
+        lambda match: match.group(1)
+        + match.group(0).strip()
         + "  // TSC = "
-        + read_hex_to_formatted_instruction(match.group(1).zfill(4))
-        + "\n",
+        + read_hex_to_formatted_instruction(match.group(1).zfill(4)),
         target,
     )
     return result
