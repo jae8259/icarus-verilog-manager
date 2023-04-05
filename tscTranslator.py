@@ -2,8 +2,9 @@
 
 # Render digits to binary so 16bit string
 
+import argparse
 from functools import reduce
-from typing import Dict
+from typing import Dict, TypedDict
 
 HEX = 16
 BIN = 2
@@ -123,3 +124,15 @@ def format_instruction(instruction: str):
     return reduce(
         lambda acc, curr: acc + (" " + curr[0] if curr[1] else ""), gen, result[0]
     )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="Hex to tsc", description="Translate hex code to tsc assembly"
+    )
+
+    parser.add_argument("hexcode")
+
+    args = parser.parse_args()
+
+    print(read_hex_to_formatted_instruction(args.hexcode))
