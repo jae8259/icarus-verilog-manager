@@ -1,10 +1,13 @@
 # Find patterns with memory[*] <= 16'h\d{1..4}
 
 # Render digits to binary so 16bit string
-
 import argparse
+import re
 from functools import reduce
+from pathlib import Path
 from typing import Dict, TypedDict
+
+HEX_REGEX = r"^(.*?)memory\[.*\].*=.*16'h([0-9A-Fa-f]{1,4});\s*$"
 
 HEX = 16
 BIN = 2
@@ -65,6 +68,33 @@ for opcode, instruction in OPCODE_MAP.items():
 
 OPCODE_MAP = {dec_to_opcode(key): value for key, value in OPCODE_MAP.items()}
 FUNC_MAP = {dec_to_func_code(key): value for key, value in FUNC_MAP.items()}
+
+
+def add_comment_on_file(target_path: Path, save_path: Path | None = None):
+    if save_path is None:
+        save_path = target_path
+    content = ""
+    with open(target_path, "r") as verilog_file:
+        content = verilog_file.read()
+    content = add_tsc_comment(content)
+
+    with open(save_path, "w") as comment_verilog_file:
+        comment_verilog_file.write(content)
+
+
+def add_tsc_comment(target: str) -> str:
+    result = ""
+    pattern = re.compile(HEX_REGEX, re.MULTILINE)
+
+    result = re.sub(
+        pattern,
+        lambda match: match.group(1)
+        + match.group(0).strip()
+        + "  // TSC = "
+        + read_hex_to_formatted_instruction(match.group(2).zfill(4)),
+        target,
+    )
+    return result
 
 
 def read_hex_to_formatted_instruction(machine_code: str):
@@ -134,8 +164,12 @@ if __name__ == "__main__":
         prog="Hex to tsc", description="Translate hex code to tsc assembly"
     )
 
-    parser.add_argument("hexcode")
-
+    parser.add_argument("-i", dest="in_path", action="store")
+    parser.add_argument("-o", dest="out_path", action="store")
+    parser.add_argument("-c", dest="hexcode")
     args = parser.parse_args()
 
-    print(read_hex_to_formatted_instruction(args.hexcode))
+    if args.in_path is not None:
+        add_comment_on_file(args.in_path, args.out_path)
+    else:
+        print(read_hex_to_formatted_instruction(args.hexcode))
