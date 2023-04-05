@@ -1,3 +1,4 @@
+import argparse
 import re
 from pathlib import Path
 
@@ -6,7 +7,9 @@ from tscTranslator import read_hex_to_formatted_instruction
 HEX_REGEX = r"^(.*?)memory\[.*\].*=.*16'h([0-9A-Fa-f]{1,4});\s*$"
 
 
-def add_comment_on_file(target_path: Path, save_path: Path):
+def add_comment_on_file(target_path: Path, save_path: Path | None = None):
+    if save_path is None:
+        save_path = target_path
     content = ""
     with open(target_path, "r") as verilog_file:
         content = verilog_file.read()
@@ -36,4 +39,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        prog="comment tsc", description="Comment hex code as tsc assembly"
+    )
+
+    parser.add_argument("in_path")
+    parser.add_argument("-o", dest="out_path", action="store")
+
+    args = parser.parse_args()
+    if args.in_path is not None:
+        add_comment_on_file(args.in_path, args.out_path)
