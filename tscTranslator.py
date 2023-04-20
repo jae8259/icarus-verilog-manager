@@ -1,12 +1,11 @@
-# Find patterns with memory[*] <= 16'h\d{1..4}
-
-# Render digits to binary so 16bit string
 import argparse
 import re
 from functools import reduce
 from pathlib import Path
-from typing import Dict, TypedDict
+from typing import Dict
 
+# Find patterns with memory[*] <= 16'h\d{1..4}
+# Render digits to binary so 16bit string
 HEX_REGEX = r"^(.*?)memory\[.*\].*=.*16'h([0-9A-Fa-f]{1,4});\s*$"
 
 HEX = 16
@@ -145,7 +144,7 @@ def translate_j_type(machine_code: str):
     opcode = machine_code[0:4]
     func_name: str = OPCODE_MAP.get(opcode)
 
-    return f"{func_name} tar:{int(target_address, BIN)}"
+    return f"{func_name} tar:{hex(int(target_address, BIN))}"
 
 
 def format_tsc_to_instruction(instruction: str):
