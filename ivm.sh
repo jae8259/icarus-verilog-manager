@@ -32,7 +32,7 @@ function appendTime() {
 function gatherFiles() {
     if [ $# -eq 0 ]; then
         # No command-line arguments provided, run all commands except wildcard
-        for cmd in modules tests waveforms; do
+        for cmd in tests waveforms; do
             if [ "$cmd" != "*" ]; then
                 "$0" gather "$cmd"
             fi
@@ -57,7 +57,7 @@ function gatherFiles() {
             echo "Moved waveforms"
             ;;
         *)
-            echo "ivm : Command not found"
+            echo "Command not found"
             exit 1
             ;;
         esac
@@ -67,6 +67,7 @@ function gatherFiles() {
 function runIverilog() {
     file_path=$1
     library_path=$2
+    include_path=$3
     file_name=$(basename -- "$file_path")
     dir_name=$(dirname -- "$file_path")
     error_log_path=errors/${file_name%.*}.log
@@ -74,8 +75,12 @@ function runIverilog() {
     if [ -z $library_path ]; then
         library_path="./modules"
     fi
+    
+    if [ -z $include_path ]; then
+        include_path="./includes"
+    fi
 
-    iverilog -y ${library_path} -o runs/${file_name%.*} $file_path 2>$error_log_path &
+    iverilog -y ${library_path} -o runs/${file_name%.*} -I ${include_path} $file_path 2>$error_log_path &
     wait
     if [ -s $error_log_path ]; then
         echo "Error: Icarus Verilog failed"
@@ -88,7 +93,7 @@ function runIverilog() {
 
 case "$1" in
 init)
-    mkdir {errors,modules,runs,tests,waveforms} 2>/dev/null
+    mkdir {errors,modules,runs,tests,waveforms,includes} 2>/dev/null
     echo "Initiate as iverilog project"
     ;;
 gather)
@@ -104,13 +109,17 @@ run)
     # set default time value
     test_time=""
     library_path=""
-    while getopts "t:y:" opt; do
+    include_path=""
+    while getopts "t:y:I" opt; do
         case $opt in
         t)
             test_time=$OPTARG
             ;;
         y)
             library_path=$OPTARG
+            ;;
+        I)
+            include_path=$OPTARG
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -138,7 +147,7 @@ run)
     if [ ! -z $test_time ]; then
         appendTime "$file_path" "$test_time" 1>/dev/null
     fi
-    runIverilog "$file_path" "$library_path"
+    runIverilog "$file_path" "$library_path" "$include_path"
 
     # restore original content
     cp "$file_path.bak" "$file_path" &
