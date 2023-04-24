@@ -4,7 +4,7 @@ function appendDump() {
     dir_path="$(dirname "$file_path")"
     file_name="$(basename "$file_path")"
     file_base="${file_name%.*}"
-    module_name=$(echo "$file_base" | tr '[:upper:]' '[:lower:]')
+    module_name=$file_base
 
     if grep -q "endmodule" "$file_path"; then
         gsed -i "/endmodule/i initial begin \$dumpfile(\"waveforms/$file_base.vcd\") ;\$dumpvars(0, $module_name) ; end" "$file_path"
